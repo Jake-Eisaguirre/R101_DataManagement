@@ -193,3 +193,83 @@ ggplot(data = plot_data, aes(x = factor(year), y = count, fill = region)) +
 
 :::
 
+## `capture` Table Species Composition
+:::{.panel-tabset}
+### Figure
+```{r}
+#| results: hide
+#load libraries 
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+
+librarian::shelf(RPostgres, DBI, tidyverse, lubridate)
+
+#database connection
+connection <- dbConnect(drv = dbDriver("Postgres"),
+                        dbname = Sys.getenv("aws_dbname"),
+                        host = Sys.getenv("aws_host"),
+                        port = Sys.getenv("aws_port"),
+                        user = Sys.getenv("aws_user"),
+                        password = Sys.getenv("aws_password"))
+#search path
+dbExecute(connection, "set search_path to survey_data")
+
+#query Data
+species_q <- "select r.region, s.site, v.date, s2.detection_type, c.species_capture
+              from region r
+              join site s on r.region_id = s.region_id
+              join visit v on s.site_id = v.site_id
+              join survey s2 on v.visit_id = s2.visit_id
+              join capture c on s2.survey_id = c.survey_id;" 
+
+species_comp <- dbGetQuery(connection, species_q)
+
+#wrangle data
+species_comp_data <- species_comp %>% 
+  select(region, species_capture) %>% 
+  group_by(region, species_capture) %>% 
+  reframe(count = n()) %>% 
+  filter(count > 250,
+         count < 5000)  %>% 
+  group_by(species_capture) %>% 
+  mutate(tot_count = sum(count)) %>% 
+  ungroup() %>% 
+  mutate(species_capture = reorder(species_capture, -tot_count))
+
+species_tot <- species_comp_data %>% 
+  group_by(species_capture) %>% 
+  summarise(tot_count = sum(count))
+  
+# Create a custom color palette with 8 unique region colors
+custom_palette <- c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f")
+
+
+ggplot() +
+  geom_col(data = species_comp_data, aes(x = species_capture, y = count, fill = region), width = 0.7, color = "black") +
+  
+  # Add total count as geom_text labels
+  geom_text(data = species_tot, aes(x = species_capture, y = tot_count, label = tot_count),
+            vjust = -0.5, size = 2, color = "black") +
+  
+  theme_minimal() +
+  labs(
+    title = "Database Species Composition",
+    subtitle = "Rana_muscosa removed (45821); Only captures with >250; ~200 unique species",
+    x = "Species",
+    y = "Captures",
+    fill = "Species"
+  ) +
+    scale_fill_manual(name = "Top Regions", values = custom_palette) +  # Use custom palette and set legend title
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right",
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+
+:::
