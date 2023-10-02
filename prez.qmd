@@ -1,0 +1,195 @@
+---
+title: "RIBBiTR 101 - Data Management"
+author: "Jake Eisaguirre"
+format: 
+  revealjs:
+    theme: moon
+    logo: ribbitr.png
+editor: visual
+---
+
+
+## Discussion Outline 
+:::::{.columns}
+::: {.incremental .column width="45%"}
+
+-   Database summarization 
+
+-   Processed Swab Data Queries
+
+-   AWS RStudio Tutorial
+
+:::
+
+:::{.column width="55%"}
+
+![](red_eye.jpeg){.absolute top=10 bottom=30 width=6in}
+:::
+:::::
+
+
+## Total Captures
+:::{.panel-tabset}
+
+### Figure
+
+```{r}
+#| results: hide
+#load libraries 
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+
+librarian::shelf(RPostgres, DBI, tidyverse, lubridate)
+
+#database connection
+connection <- dbConnect(drv = dbDriver("Postgres"),
+                        dbname = Sys.getenv("aws_dbname"),
+                        host = Sys.getenv("aws_host"),
+                        port = Sys.getenv("aws_port"),
+                        user = Sys.getenv("aws_user"),
+                        password = Sys.getenv("aws_password"))
+#search path
+dbExecute(connection, "set search_path to survey_data")
+
+# Query Data
+cap_q <- "select r.region, s.site, v.date, s2.detection_type, c.species_capture
+          from region r
+          join site s on r.region_id = s.region_id
+          join visit v on s.site_id = v.site_id
+          join survey s2 on v.visit_id = s2.visit_id
+          join capture c on s2.survey_id = c.survey_id;" 
+
+c_count <- dbGetQuery(connection, cap_q)
+
+# Summnarize Data
+plot_data <- c_count %>% 
+  mutate(year = year(date)) %>% 
+  select(region, year, species_capture) %>% 
+  group_by(region, year) %>%
+  reframe(count = n()) %>% 
+  group_by(year) %>% 
+  mutate(total = sum(count))
+
+
+
+# Create a custom color palette with 16 unique colors
+custom_palette <- c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",
+                    "#FFFF33", "#A65628", "#F781BF", "#999999", "#66C2A5",
+                    "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#B3B3B3")
+
+
+
+# Create the ggplot
+ggplot(data = plot_data, aes(x = factor(year), y = count, fill = region)) +
+  geom_col() +
+
+  # Customize the appearance
+  theme_minimal() +  # Choose a theme
+  labs(
+    title = "Captures by Year and Region",
+    subtitle = "71084 Total Captures",
+    x = "Year",
+    y = "Amphibian Captures",
+    fill = "Region"
+  ) +
+  scale_fill_manual(values = custom_palette) +  # Use custom colors
+  theme(
+    legend.position = "top",  # Move the legend to the top
+    legend.key.size = unit(0.5, "lines"),  # Adjust the size of the legend key
+    legend.text = element_text(size = 8),  # Adjust the size of the legend text
+    panel.grid.major = element_blank(),  # Remove gridlines
+    panel.border = element_blank(),  # Remove panel border
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels
+  ) +
+  geom_text(aes(x = factor(year), y = total, label = total), # Add yearly totals as text
+            vjust = -0.5, size = 2, color = "black")
+    
+  
+```
+
+### Schema
+!['survey_data' Schema](RIBBiTR - survey_data.png){fig-alt="center" height=5in width=10in}
+
+### Code
+```{r}
+#| echo: true
+#| eval: false
+
+#load libraries 
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+
+librarian::shelf(RPostgres, DBI, tidyverse, lubridate)
+
+#database connection
+connection <- dbConnect(drv = dbDriver("Postgres"),
+                        dbname = Sys.getenv("aws_dbname"),
+                        host = Sys.getenv("aws_host"),
+                        port = Sys.getenv("aws_port"),
+                        user = Sys.getenv("aws_user"),
+                        password = Sys.getenv("aws_password"))
+#search path
+dbExecute(connection, "set search_path to survey_data")
+
+# Query Data
+cap_q <- "select r.region, s.site, v.date, s2.detection_type, c.species_capture
+          from region r
+          join site s on r.region_id = s.region_id
+          join visit v on s.site_id = v.site_id
+          join survey s2 on v.visit_id = s2.visit_id
+          join capture c on s2.survey_id = c.survey_id;" 
+
+c_count <- dbGetQuery(connection, cap_q)
+
+# Summnarize Data
+plot_data <- c_count %>% 
+  mutate(year = year(date)) %>% 
+  select(region, year, species_capture) %>% 
+  group_by(region, year) %>%
+  reframe(count = n()) %>% 
+  group_by(year) %>% 
+  mutate(total = sum(count))
+
+
+
+# Create a custom color palette with 16 unique colors
+custom_palette <- c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3", "#FF7F00",
+                    "#FFFF33", "#A65628", "#F781BF", "#999999", "#66C2A5",
+                    "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#B3B3B3")
+
+
+
+# Create the ggplot
+ggplot(data = plot_data, aes(x = factor(year), y = count, fill = region)) +
+  geom_col() +
+
+  # Customize the appearance
+  theme_minimal() +  # Choose a theme
+  labs(
+    title = "Captures by Year and Region",
+    subtitle = "71084 Total Captures",
+    x = "Year",
+    y = "Amphibian Captures",
+    fill = "Region"
+  ) +
+  scale_fill_manual(values = custom_palette) +  # Use custom colors
+  theme(
+    legend.position = "top",  # Move the legend to the top
+    legend.key.size = unit(0.5, "lines"),  # Adjust the size of the legend key
+    legend.text = element_text(size = 8),  # Adjust the size of the legend text
+    panel.grid.major = element_blank(),  # Remove gridlines
+    panel.border = element_blank(),  # Remove panel border
+    axis.text.x = element_text(angle = 45, hjust = 1)  # Rotate x-axis labels
+  ) +
+  geom_text(aes(x = factor(year), y = total, label = total),
+            vjust = -0.5, size = 2, color = "black")
+    
+  
+```
+
+:::
+
