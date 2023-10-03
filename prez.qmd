@@ -8,29 +8,25 @@ format:
 editor: visual
 ---
 
+## Discussion Outline
 
-## Discussion Outline 
-:::::{.columns}
+::: columns
 ::: {.incremental .column width="45%"}
-
--   Database summarization 
+-   Database Summarization
 
 -   Processed Swab Data Queries
 
 -   AWS RStudio Tutorial
-
 :::
 
-:::{.column width="55%"}
-
-![](red_eye.jpeg){.absolute top=10 bottom=30 width=6in}
+::: {.column width="55%"}
+![](red_eye.jpeg){.absolute top="10" bottom="30" width="6in"}
 :::
-:::::
-
+:::
 
 ## Total Captures
-:::{.panel-tabset}
 
+::: panel-tabset
 ### Figure
 
 ```{r}
@@ -109,10 +105,12 @@ ggplot(data = plot_data, aes(x = factor(year), y = count, fill = region)) +
   
 ```
 
-### Schema
-!['survey_data' Schema](RIBBiTR - survey_data.png){fig-alt="center" height=5in width=10in}
+### Schema {.nostretch}
+
+!['survey_data' Schema](RIBBiTR%20-%20survey_data.png){fig-alt="center"}
 
 ### Code
+
 ```{r}
 #| echo: true
 #| eval: false
@@ -190,12 +188,13 @@ ggplot(data = plot_data, aes(x = factor(year), y = count, fill = region)) +
     
   
 ```
-
 :::
 
-## `capture` Table Species Composition
-:::{.panel-tabset}
+## Capture Table Species Composition
+
+::: panel-tabset
 ### Figure
+
 ```{r}
 #| results: hide
 #load libraries 
@@ -271,5 +270,242 @@ ggplot() +
   )
 ```
 
+### Code
 
+```{r}
+#| echo: true
+#| eval: false
+#load libraries 
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+
+librarian::shelf(RPostgres, DBI, tidyverse, lubridate)
+
+#database connection
+connection <- dbConnect(drv = dbDriver("Postgres"),
+                        dbname = Sys.getenv("aws_dbname"),
+                        host = Sys.getenv("aws_host"),
+                        port = Sys.getenv("aws_port"),
+                        user = Sys.getenv("aws_user"),
+                        password = Sys.getenv("aws_password"))
+#search path
+dbExecute(connection, "set search_path to survey_data")
+
+#query Data
+species_q <- "select r.region, s.site, v.date, s2.detection_type, c.species_capture
+              from region r
+              join site s on r.region_id = s.region_id
+              join visit v on s.site_id = v.site_id
+              join survey s2 on v.visit_id = s2.visit_id
+              join capture c on s2.survey_id = c.survey_id;" 
+
+species_comp <- dbGetQuery(connection, species_q)
+
+#wrangle data
+species_comp_data <- species_comp %>% 
+  select(region, species_capture) %>% 
+  group_by(region, species_capture) %>% 
+  reframe(count = n()) %>% 
+  filter(count > 250,
+         count < 5000)  %>% 
+  group_by(species_capture) %>% 
+  mutate(tot_count = sum(count)) %>% 
+  ungroup() %>% 
+  mutate(species_capture = reorder(species_capture, -tot_count))
+
+species_tot <- species_comp_data %>% 
+  group_by(species_capture) %>% 
+  summarise(tot_count = sum(count))
+  
+# Create a custom color palette with 8 unique region colors
+custom_palette <- c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f")
+
+
+ggplot() +
+  geom_col(data = species_comp_data, aes(x = species_capture, y = count, fill = region), width = 0.7, color = "black") +
+  
+  # Add total count as geom_text labels
+  geom_text(data = species_tot, aes(x = species_capture, y = tot_count, label = tot_count),
+            vjust = -0.5, size = 2, color = "black") +
+  
+  theme_minimal() +
+  labs(
+    title = "Database Species Composition",
+    subtitle = "Rana_muscosa removed (45821); Only captures with >250; ~200 unique species",
+    x = "Species",
+    y = "Captures",
+    fill = "Species"
+  ) +
+    scale_fill_manual(name = "Top Regions", values = custom_palette) +  # Use custom palette and set legend title
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right",
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+:::
+
+## Bd Results Composition
+
+::: panel-tabset
+### Bd Results Species Composition
+```{r}
+#| results: hide
+#load libraries 
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+
+librarian::shelf(RPostgres, DBI, tidyverse, lubridate)
+
+#database connection
+connection <- dbConnect(drv = dbDriver("Postgres"),
+                        dbname = Sys.getenv("aws_dbname"),
+                        host = Sys.getenv("aws_host"),
+                        port = Sys.getenv("aws_port"),
+                        user = Sys.getenv("aws_user"),
+                        password = Sys.getenv("aws_password"))
+#search path
+dbExecute(connection, "set search_path to survey_data")
+
+#query Data
+bd_comp <- "select r.region, s.site, v.date, s2.detection_type, c.species_capture, bd.bd_swab_id
+              from region r
+              join site s on r.region_id = s.region_id
+              join visit v on s.site_id = v.site_id
+              join survey s2 on v.visit_id = s2.visit_id
+              join capture c on s2.survey_id = c.survey_id
+              join qpcr_bd_results bd on c.bd_swab_id = bd.bd_swab_id;" 
+
+bd_comp <- dbGetQuery(connection, bd_comp)
+
+#wrangle data
+bd_comp_spec <- bd_comp %>% 
+  select(region, species_capture) %>% 
+  group_by(region, species_capture) %>% 
+  reframe(count = n()) %>% 
+  filter(count > 250,
+         count < 5000)  %>% 
+  group_by(species_capture) %>% 
+  mutate(tot_count = sum(count)) %>% 
+  ungroup() %>% 
+  mutate(species_capture = reorder(species_capture, -tot_count))
+
+
+bd_species_tot_comp <- bd_comp_spec %>% 
+  group_by(species_capture) %>% 
+  summarise(tot_count = sum(count))
+  
+# Create a custom color palette with 8 unique region colors
+custom_palette <- c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b", "#e377c2", "#7f7f7f")
+
+
+ggplot() +
+  geom_col(data = bd_comp_spec, aes(x = species_capture, y = count, fill = region), width = 0.7, color = "black") +
+  
+  # Add total count as geom_text labels
+  geom_text(data = bd_species_tot_comp, aes(x = species_capture, y = tot_count, label = tot_count),
+            vjust = -0.5, size = 2, color = "black") +
+  
+  theme_minimal() +
+  labs(
+    title = "Database Bd Results Species Composition",
+    subtitle = "Rana_muscosa removed (33056 Results); Only Bd Results with >250; 169 Unique Species w/ Results",
+    x = "Species",
+    y = "Bd Swab Results",
+    fill = "Species"
+  ) +
+    scale_fill_manual(name = "Top Regions", values = custom_palette) +  # Use custom palette and set legend title
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right",
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+
+### Bd Results Region Composition
+```{r}
+#| results: hide
+#load libraries 
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+
+librarian::shelf(RPostgres, DBI, tidyverse, lubridate)
+
+#database connection
+connection <- dbConnect(drv = dbDriver("Postgres"),
+                        dbname = Sys.getenv("aws_dbname"),
+                        host = Sys.getenv("aws_host"),
+                        port = Sys.getenv("aws_port"),
+                        user = Sys.getenv("aws_user"),
+                        password = Sys.getenv("aws_password"))
+#search path
+dbExecute(connection, "set search_path to survey_data")
+
+#query Data
+bd_comp <- "select l.location, r.region, s.site, v.date, s2.detection_type, c.species_capture, bd.bd_swab_id
+              from location l
+              join region r on l.location_id = r.location_id
+              join site s on r.region_id = s.region_id
+              join visit v on s.site_id = v.site_id
+              join survey s2 on v.visit_id = s2.visit_id
+              join capture c on s2.survey_id = c.survey_id
+              join qpcr_bd_results bd on c.bd_swab_id = bd.bd_swab_id;" 
+
+bd_comp <- dbGetQuery(connection, bd_comp)
+
+#wrangle data
+bd_comp_reg <- bd_comp %>% 
+  select(location, region, species_capture) %>% 
+  group_by(location, region) %>% 
+  reframe(count = n()) %>% 
+  # filter(count > 250,
+  #        count < 5000)  %>% 
+  mutate(region = reorder(region, -count))
+
+  
+# Create a custom color palette with 16 unique colors
+custom_palette <- c( "#4DAF4A", "#9467bd", "#377EB8")
+
+
+
+ggplot() +
+  geom_col(data = bd_comp_reg, aes(x = region, y = count, fill = location), width = 0.7, color = "black") +
+  
+  # Add total count as geom_text labels
+  geom_text(data = bd_comp_reg, aes(x = region, y = count, label = count),
+            vjust = -0.5, size = 2, color = "black") +
+  
+  theme_minimal() +
+  labs(
+    title = "Database Bd Results Region Composition",
+    #subtitle = "Rana_muscosa removed (33056 Results); Only Bd Results with >250; 169 Unique Species w/ Results",
+    x = "Species",
+    y = "Bd Swab Results",
+    fill = "Species"
+  ) +
+    scale_fill_manual(name = "Top Regions", values = custom_palette) +  # Use custom palette and set legend title
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "right",
+    panel.grid.major = element_blank(),
+    panel.border = element_blank(),
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+
+### Aggregated Bd Results Table
+
+### Code
 :::

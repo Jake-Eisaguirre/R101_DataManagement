@@ -403,10 +403,11 @@ Jake Eisaguirre
 </section>
 <section id="discussion-outline" class="slide level2">
 <h2>Discussion Outline</h2>
+<p>logo.css .reveal .slide-logo { height: 100px !important; width: 100px !important; max-width: unset !important; max-height: unset !important; }</p>
 <div class="columns">
 <div class="column" style="width:45%;">
 <ul>
-<li class="fragment"><p>Database summarization</p></li>
+<li class="fragment"><p>Database Summarization</p></li>
 <li class="fragment"><p>Processed Swab Data Queries</p></li>
 <li class="fragment"><p>AWS RStudio Tutorial</p></li>
 </ul>
@@ -430,7 +431,7 @@ Jake Eisaguirre
 <div id="tabset-1-2">
 <div class="quarto-figure quarto-figure-center">
 <figure>
-<p><img data-src="RIBBiTR%20-%20survey_data.png" style="width:10in;height:5in" alt="center"></p>
+<p><img data-src="RIBBiTR%20-%20survey_data.png" alt="center"></p>
 <figcaption>‘survey_data’ Schema</figcaption>
 </figure>
 </div>
@@ -511,9 +512,99 @@ Jake Eisaguirre
 </div>
 </div>
 </div>
+</section>
+<section id="capture-table-species-composition" class="slide level2">
+<h2>Capture Table Species Composition</h2>
+<div class="panel-tabset">
+<ul id="tabset-2" class="panel-tabset-tabby"><li><a data-tabby-default="" href="#tabset-2-1">Figure</a></li><li><a href="#tabset-2-2">Code</a></li></ul>
+<div class="tab-content">
+<div id="tabset-2-1">
+<div class="cell">
+<div class="cell-output-display">
+<p><img data-src="prez_files/figure-revealjs/unnamed-chunk-3-1.png" width="960"></p>
+</div>
+</div>
+</div>
+<div id="tabset-2-2">
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1"></a><span class="co">#load libraries </span></span>
+<span id="cb2-2"><a href="#cb2-2"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(librarian)){</span>
+<span id="cb2-3"><a href="#cb2-3"></a>  <span class="fu">install.packages</span>(<span class="st">"librarian"</span>)</span>
+<span id="cb2-4"><a href="#cb2-4"></a>  <span class="fu">library</span>(librarian)</span>
+<span id="cb2-5"><a href="#cb2-5"></a>}</span>
+<span id="cb2-6"><a href="#cb2-6"></a></span>
+<span id="cb2-7"><a href="#cb2-7"></a>librarian<span class="sc">::</span><span class="fu">shelf</span>(RPostgres, DBI, tidyverse, lubridate)</span>
+<span id="cb2-8"><a href="#cb2-8"></a></span>
+<span id="cb2-9"><a href="#cb2-9"></a><span class="co">#database connection</span></span>
+<span id="cb2-10"><a href="#cb2-10"></a>connection <span class="ot">&lt;-</span> <span class="fu">dbConnect</span>(<span class="at">drv =</span> <span class="fu">dbDriver</span>(<span class="st">"Postgres"</span>),</span>
+<span id="cb2-11"><a href="#cb2-11"></a>                        <span class="at">dbname =</span> <span class="fu">Sys.getenv</span>(<span class="st">"aws_dbname"</span>),</span>
+<span id="cb2-12"><a href="#cb2-12"></a>                        <span class="at">host =</span> <span class="fu">Sys.getenv</span>(<span class="st">"aws_host"</span>),</span>
+<span id="cb2-13"><a href="#cb2-13"></a>                        <span class="at">port =</span> <span class="fu">Sys.getenv</span>(<span class="st">"aws_port"</span>),</span>
+<span id="cb2-14"><a href="#cb2-14"></a>                        <span class="at">user =</span> <span class="fu">Sys.getenv</span>(<span class="st">"aws_user"</span>),</span>
+<span id="cb2-15"><a href="#cb2-15"></a>                        <span class="at">password =</span> <span class="fu">Sys.getenv</span>(<span class="st">"aws_password"</span>))</span>
+<span id="cb2-16"><a href="#cb2-16"></a><span class="co">#search path</span></span>
+<span id="cb2-17"><a href="#cb2-17"></a><span class="fu">dbExecute</span>(connection, <span class="st">"set search_path to survey_data"</span>)</span>
+<span id="cb2-18"><a href="#cb2-18"></a></span>
+<span id="cb2-19"><a href="#cb2-19"></a><span class="co">#query Data</span></span>
+<span id="cb2-20"><a href="#cb2-20"></a>species_q <span class="ot">&lt;-</span> <span class="st">"select r.region, s.site, v.date, s2.detection_type, c.species_capture</span></span>
+<span id="cb2-21"><a href="#cb2-21"></a><span class="st">              from region r</span></span>
+<span id="cb2-22"><a href="#cb2-22"></a><span class="st">              join site s on r.region_id = s.region_id</span></span>
+<span id="cb2-23"><a href="#cb2-23"></a><span class="st">              join visit v on s.site_id = v.site_id</span></span>
+<span id="cb2-24"><a href="#cb2-24"></a><span class="st">              join survey s2 on v.visit_id = s2.visit_id</span></span>
+<span id="cb2-25"><a href="#cb2-25"></a><span class="st">              join capture c on s2.survey_id = c.survey_id;"</span> </span>
+<span id="cb2-26"><a href="#cb2-26"></a></span>
+<span id="cb2-27"><a href="#cb2-27"></a>species_comp <span class="ot">&lt;-</span> <span class="fu">dbGetQuery</span>(connection, species_q)</span>
+<span id="cb2-28"><a href="#cb2-28"></a></span>
+<span id="cb2-29"><a href="#cb2-29"></a><span class="co">#wrangle data</span></span>
+<span id="cb2-30"><a href="#cb2-30"></a>species_comp_data <span class="ot">&lt;-</span> species_comp <span class="sc">%&gt;%</span> </span>
+<span id="cb2-31"><a href="#cb2-31"></a>  <span class="fu">select</span>(region, species_capture) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-32"><a href="#cb2-32"></a>  <span class="fu">group_by</span>(region, species_capture) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-33"><a href="#cb2-33"></a>  <span class="fu">reframe</span>(<span class="at">count =</span> <span class="fu">n</span>()) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-34"><a href="#cb2-34"></a>  <span class="fu">filter</span>(count <span class="sc">&gt;</span> <span class="dv">250</span>,</span>
+<span id="cb2-35"><a href="#cb2-35"></a>         count <span class="sc">&lt;</span> <span class="dv">5000</span>)  <span class="sc">%&gt;%</span> </span>
+<span id="cb2-36"><a href="#cb2-36"></a>  <span class="fu">group_by</span>(species_capture) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-37"><a href="#cb2-37"></a>  <span class="fu">mutate</span>(<span class="at">tot_count =</span> <span class="fu">sum</span>(count)) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-38"><a href="#cb2-38"></a>  <span class="fu">ungroup</span>() <span class="sc">%&gt;%</span> </span>
+<span id="cb2-39"><a href="#cb2-39"></a>  <span class="fu">mutate</span>(<span class="at">species_capture =</span> <span class="fu">reorder</span>(species_capture, <span class="sc">-</span>tot_count))</span>
+<span id="cb2-40"><a href="#cb2-40"></a></span>
+<span id="cb2-41"><a href="#cb2-41"></a>species_tot <span class="ot">&lt;-</span> species_comp_data <span class="sc">%&gt;%</span> </span>
+<span id="cb2-42"><a href="#cb2-42"></a>  <span class="fu">group_by</span>(species_capture) <span class="sc">%&gt;%</span> </span>
+<span id="cb2-43"><a href="#cb2-43"></a>  <span class="fu">summarise</span>(<span class="at">tot_count =</span> <span class="fu">sum</span>(count))</span>
+<span id="cb2-44"><a href="#cb2-44"></a>  </span>
+<span id="cb2-45"><a href="#cb2-45"></a><span class="co"># Create a custom color palette with 8 unique region colors</span></span>
+<span id="cb2-46"><a href="#cb2-46"></a>custom_palette <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"#1f77b4"</span>, <span class="st">"#ff7f0e"</span>, <span class="st">"#2ca02c"</span>, <span class="st">"#d62728"</span>, <span class="st">"#9467bd"</span>, <span class="st">"#8c564b"</span>, <span class="st">"#e377c2"</span>, <span class="st">"#7f7f7f"</span>)</span>
+<span id="cb2-47"><a href="#cb2-47"></a></span>
+<span id="cb2-48"><a href="#cb2-48"></a></span>
+<span id="cb2-49"><a href="#cb2-49"></a><span class="fu">ggplot</span>() <span class="sc">+</span></span>
+<span id="cb2-50"><a href="#cb2-50"></a>  <span class="fu">geom_col</span>(<span class="at">data =</span> species_comp_data, <span class="fu">aes</span>(<span class="at">x =</span> species_capture, <span class="at">y =</span> count, <span class="at">fill =</span> region), <span class="at">width =</span> <span class="fl">0.7</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb2-51"><a href="#cb2-51"></a>  </span>
+<span id="cb2-52"><a href="#cb2-52"></a>  <span class="co"># Add total count as geom_text labels</span></span>
+<span id="cb2-53"><a href="#cb2-53"></a>  <span class="fu">geom_text</span>(<span class="at">data =</span> species_tot, <span class="fu">aes</span>(<span class="at">x =</span> species_capture, <span class="at">y =</span> tot_count, <span class="at">label =</span> tot_count),</span>
+<span id="cb2-54"><a href="#cb2-54"></a>            <span class="at">vjust =</span> <span class="sc">-</span><span class="fl">0.5</span>, <span class="at">size =</span> <span class="dv">2</span>, <span class="at">color =</span> <span class="st">"black"</span>) <span class="sc">+</span></span>
+<span id="cb2-55"><a href="#cb2-55"></a>  </span>
+<span id="cb2-56"><a href="#cb2-56"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb2-57"><a href="#cb2-57"></a>  <span class="fu">labs</span>(</span>
+<span id="cb2-58"><a href="#cb2-58"></a>    <span class="at">title =</span> <span class="st">"Database Species Composition"</span>,</span>
+<span id="cb2-59"><a href="#cb2-59"></a>    <span class="at">subtitle =</span> <span class="st">"Rana_muscosa removed (45821); Only captures with &gt;250; ~200 unique species"</span>,</span>
+<span id="cb2-60"><a href="#cb2-60"></a>    <span class="at">x =</span> <span class="st">"Species"</span>,</span>
+<span id="cb2-61"><a href="#cb2-61"></a>    <span class="at">y =</span> <span class="st">"Captures"</span>,</span>
+<span id="cb2-62"><a href="#cb2-62"></a>    <span class="at">fill =</span> <span class="st">"Species"</span></span>
+<span id="cb2-63"><a href="#cb2-63"></a>  ) <span class="sc">+</span></span>
+<span id="cb2-64"><a href="#cb2-64"></a>    <span class="fu">scale_fill_manual</span>(<span class="at">name =</span> <span class="st">"Top Regions"</span>, <span class="at">values =</span> custom_palette) <span class="sc">+</span>  <span class="co"># Use custom palette and set legend title</span></span>
+<span id="cb2-65"><a href="#cb2-65"></a>  <span class="fu">theme</span>(</span>
+<span id="cb2-66"><a href="#cb2-66"></a>    <span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>),</span>
+<span id="cb2-67"><a href="#cb2-67"></a>    <span class="at">legend.position =</span> <span class="st">"right"</span>,</span>
+<span id="cb2-68"><a href="#cb2-68"></a>    <span class="at">panel.grid.major =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb2-69"><a href="#cb2-69"></a>    <span class="at">panel.border =</span> <span class="fu">element_blank</span>(),</span>
+<span id="cb2-70"><a href="#cb2-70"></a>    <span class="at">plot.title =</span> <span class="fu">element_text</span>(<span class="at">hjust =</span> <span class="fl">0.5</span>)</span>
+<span id="cb2-71"><a href="#cb2-71"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</div>
+</div>
+</div>
 <p><img src="ribbitr.png" class="slide-logo"></p>
 <div class="footer footer-default">
-
+<p>RIBBiTR 101 - Data Management</p>
 </div>
 </section>
     </div>
