@@ -5,8 +5,18 @@ format:
   revealjs:
     theme: moon
     logo: ribbitr.png
-editor: visual
+editor: source
 ---
+
+```{css, echo=FALSE}
+
+.panel-tabset-tabby {
+  font-size: 23px;
+}
+
+```
+
+
 
 ## Discussion Outline
 
@@ -349,10 +359,13 @@ ggplot() +
 ```
 :::
 
+
+
 ## Bd Results Composition
 
 ::: panel-tabset
-### Bd Results Species Composition
+### Bd Swabs per Species
+
 ```{r}
 #| results: hide
 #load libraries 
@@ -430,8 +443,8 @@ ggplot() +
   )
 ```
 
+### Bd Swabs per Region
 
-### Bd Results Region Composition
 ```{r}
 #| results: hide
 #load libraries 
@@ -504,8 +517,44 @@ ggplot() +
   )
 ```
 
-
 ### Aggregated Bd Results Table
+
+```{r}
+#| results: hide  
+#load libraries 
+if (!require(librarian)){
+  install.packages("librarian")
+  library(librarian)
+}
+
+librarian::shelf(RPostgres, DBI, tidyverse, lubridate, kableExtra)
+
+#database connection
+connection <- dbConnect(drv = dbDriver("Postgres"),
+                        dbname = Sys.getenv("aws_dbname"),
+                        host = Sys.getenv("aws_host"),
+                        port = Sys.getenv("aws_port"),
+                        user = Sys.getenv("aws_user"),
+                        password = Sys.getenv("aws_password"))
+#search path
+dbExecute(connection, "set search_path to survey_data") 
+
+#query bd_results table
+bd_q <- "select * from qpcr_bd_results"
+
+bd_table <- dbGetQuery(connection, bd_q)
+```
+
+```{r}
+
+kable(head(bd_table, 100), format = "html", escape = T) %>%
+  kable_styling(full_width = T) %>%
+  row_spec(0, color = "black", background = "grey", bold = T) %>%
+  column_spec(1:21, bold = F, color = "black", background = "white" ) %>% 
+  scroll_box(width = "1400px", height = "550px")
+
+```
+
 
 ### Code
 :::
