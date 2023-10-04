@@ -9,6 +9,7 @@ editor: source
 ---
 
 
+
 ## Discussion Outline
 
 ::: columns
@@ -29,6 +30,7 @@ editor: source
 
 ::: panel-tabset
 ### Figure
+
 
 ```{r}
 #| results: hide
@@ -106,11 +108,13 @@ ggplot(data = plot_data, aes(x = factor(year), y = count, fill = region)) +
   
 ```
 
+
 ### Schema {.nostretch}
 
 !['survey_data' Schema](RIBBiTR%20-%20survey_data.png){.absolute top="10" bottom="30"}
 
 ### Code
+
 
 ```{r}
 #| echo: true
@@ -189,11 +193,13 @@ ggplot(data = plot_data, aes(x = factor(year), y = count, fill = region)) +
     
   
 ```
+
 :::
 
 ## RIBBiTR Site Distribution
 
 ::: panel-tabset
+
 ```{r}
 #| results: hide
 #load libraries 
@@ -216,7 +222,9 @@ dbExecute(connection, "set search_path to survey_data")
 
 ```
 
+
 ## Map
+
 ```{r}
 # Query Data
 site_q <- "select s.site, s.utme, s.utmn, s.utm_zone from site s;" 
@@ -255,7 +263,9 @@ leaflet() %>%
 
 ```
 
+
 ## Code
+
 ```{r}
 #| results: hide
 #| echo: true
@@ -312,12 +322,14 @@ leaflet() %>%
                        layerId = ~site)
 
 ```
+
 :::
 
 ## Capture Table Species Composition
 
 ::: panel-tabset
 ### Figure
+
 
 ```{r}
 #| results: hide
@@ -394,7 +406,9 @@ ggplot() +
   )
 ```
 
+
 ### Code
+
 
 ```{r}
 #| echo: true
@@ -471,12 +485,14 @@ ggplot() +
     plot.title = element_text(hjust = 0.5)
   )
 ```
+
 :::
 
 ## Bd Results Composition
 
 ::: panel-tabset
 ### Bd Swabs per Species
+
 
 ```{r}
 #| results: hide
@@ -555,7 +571,9 @@ ggplot() +
   )
 ```
 
+
 ### Bd Swabs per Region
+
 
 ```{r}
 #| results: hide
@@ -629,7 +647,9 @@ ggplot() +
   )
 ```
 
+
 ### Aggregated Bd Results Table
+
 
 ```{r}
 #| results: hide  
@@ -656,7 +676,9 @@ bd_q <- "select * from qpcr_bd_results"
 
 bd_table <- dbGetQuery(connection, bd_q)
 ```
+
 <code> Table Name: 'qpcr_bd_results' </code>
+
 
 ```{r}
 kable(head(bd_table, 100), format = "html", escape = T) %>%
@@ -666,6 +688,7 @@ kable(head(bd_table, 100), format = "html", escape = T) %>%
   scroll_box(width = "1400px", height = "450px")
 
 ```
+
 :::
 
 ## Querying Processed Swab Data {.scrollable}
@@ -680,6 +703,7 @@ kable(head(bd_table, 100), format = "html", escape = T) %>%
 ![](column_selection.png){.absolute top="140" left="30" bottom="60"}
 
 ### Query 
+
 
 ```{r}
 #| results: hide
@@ -704,7 +728,6 @@ dbExecute(connection, "set search_path to survey_data")
 
 ```
 
-
 ```{r}
 #| echo: true
 #| code-line-numbers: "|10"
@@ -725,7 +748,9 @@ penn_bd_data <- dbGetQuery(connection, bd_q)
 
 ```
 
+
 <br>
+
 
 ```{r}
 kable(head(penn_bd_data, 100)) %>% 
@@ -736,7 +761,9 @@ kable(head(penn_bd_data, 100)) %>%
 
 ```
 
+
 :::
+
 
 
 ```{css, echo=FALSE} 
@@ -746,5 +773,4 @@ kable(head(penn_bd_data, 100)) %>%
 }
 
 ```
-
 
