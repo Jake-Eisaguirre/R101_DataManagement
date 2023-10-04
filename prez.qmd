@@ -16,8 +16,6 @@ editor: source
 
 ```
 
-
-
 ## Discussion Outline
 
 ::: columns
@@ -359,8 +357,6 @@ ggplot() +
 ```
 :::
 
-
-
 ## Bd Results Composition
 
 ::: panel-tabset
@@ -554,7 +550,18 @@ kable(head(bd_table, 100), format = "html", escape = T) %>%
   scroll_box(width = "1400px", height = "550px")
 
 ```
+:::
 
+## Querying Processed Swab Data
 
-### Code
+::: panel-tabset
+### Swab ID Key
+
+![](swab_schema.png){.absolute top="150" width="6in" left="150"}
+
+### Variable Selection
+
+![](column_selection.png){.absolute top="140" left="30" bottom="60"}
+
+### Query
 :::
