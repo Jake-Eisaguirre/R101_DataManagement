@@ -738,6 +738,10 @@ kable(head(penn_bd_data, 100)) %>%
 
 :::
 
+## AWS RStudio Tutorial
+
+- [RIBBiTR AWS RStudio Server](http://54.219.89.164/)
+
 
 ```{css, echo=FALSE} 
 
