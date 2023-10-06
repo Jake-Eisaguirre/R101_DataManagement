@@ -108,7 +108,7 @@ ggplot(data = plot_data, aes(x = factor(year), y = count, fill = region)) +
 
 ### Schema {.nostretch}
 
-!['survey_data' Schema](RIBBiTR%20-%20survey_data.png){.absolute top="10" bottom="30"}
+!['survey_data' Schema](RIBBiTR - survey_data.png){.absolute top="10" bottom="30"}
 
 ### Code
 
@@ -555,7 +555,7 @@ ggplot() +
   )
 ```
 
-### Bd Swabs per Region
+### Bd Swabs per Location
 
 ```{r}
 #| results: hide
@@ -613,13 +613,13 @@ ggplot() +
   
   theme_minimal() +
   labs(
-    title = "Database Bd Results Region Composition",
+    title = "Database Bd Results Location Composition",
     #subtitle = "Rana_muscosa removed (33056 Results); Only Bd Results with >250; 169 Unique Species w/ Results",
     x = "Species",
     y = "Bd Swab Results",
     fill = "Species"
   ) +
-    scale_fill_manual(name = "Top Regions", values = custom_palette) +  # Use custom palette and set legend title
+    scale_fill_manual(name = "Top Locations", values = custom_palette) +  # Use custom palette and set legend title
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1),
     legend.position = "right",
@@ -739,8 +739,29 @@ kable(head(penn_bd_data, 100)) %>%
 :::
 
 ## AWS RStudio Tutorial
+::: columns
 
-- [RIBBiTR AWS RStudio Server](http://54.219.89.164/)
+
+::: {.incremental .column .r-fit-text}
+- [http://54.219.89.164/](http://54.219.89.164/)
+
+- Operates like RStudio on your computer
+
+- Multiple server [configurations](https://aws.amazon.com/ec2/instance-types/) (~275)
+
+- Run analysis in the background with out locking up your computers processors or memory
+
+- Significantly faster then most laptops
+  - EX: 8+ hour analysis on a laptop took 3 hours on the AWS Server configured for memory intensive computing
+
+:::
+
+::: {.column}
+![](aws_rstudio.png){.absolute top="90" bottom="10" width="7in"}
+:::
+
+:::
+
 
 
 ```{css, echo=FALSE} 
