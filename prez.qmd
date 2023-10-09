@@ -8,12 +8,11 @@ format:
 editor: source
 ---
 
-
 ## Discussion Outline
 
 ::: columns
 ::: {.incremental .column width="45%"}
--   Database Summarization 
+-   Database Summarization
 
 -   Processed Swab Data Queries
 
@@ -106,9 +105,9 @@ ggplot(data = plot_data, aes(x = factor(year), y = count, fill = region)) +
   
 ```
 
-### Schema {.nostretch}
+### Schema
 
-!['survey_data' Schema](RIBBiTR - survey_data.png){.absolute top="10" bottom="30"}
+![](schema.png){fig-align="center" width="9in" height="5.5in"}
 
 ### Code
 
@@ -217,6 +216,7 @@ dbExecute(connection, "set search_path to survey_data")
 ```
 
 ## Map
+
 ```{r}
 # Query Data
 site_q <- "select s.site, s.utme, s.utmn, s.utm_zone from site s;" 
@@ -256,6 +256,7 @@ leaflet() %>%
 ```
 
 ## Code
+
 ```{r}
 #| results: hide
 #| echo: true
@@ -656,6 +657,7 @@ bd_q <- "select * from qpcr_bd_results"
 
 bd_table <- dbGetQuery(connection, bd_q)
 ```
+
 <code> Table Name: 'qpcr_bd_results' </code>
 
 ```{r}
@@ -679,7 +681,7 @@ kable(head(bd_table, 100), format = "html", escape = T) %>%
 
 ![](column_selection.png){.absolute top="140" left="30" bottom="60"}
 
-### Query 
+### Query
 
 ```{r}
 #| results: hide
@@ -703,7 +705,6 @@ dbExecute(connection, "set search_path to survey_data")
 
 
 ```
-
 
 ```{r}
 #| echo: true
@@ -735,41 +736,34 @@ kable(head(penn_bd_data, 100)) %>%
   scroll_box(width = "1400px", height = "550px")
 
 ```
-
 :::
 
 ## AWS RStudio Tutorial
+
 ::: columns
-
-
 ::: {.incremental .column .r-fit-text}
-- [http://54.219.89.164/](http://54.219.89.164/)
+-   <http://54.219.89.164/>
 
-- Operates like RStudio on your computer
+-   Operates like RStudio on your computer
 
-- Multiple server [configurations](https://aws.amazon.com/ec2/instance-types/) (~275)
+-   Multiple server [configurations](https://aws.amazon.com/ec2/instance-types/) (\~275)
 
-- Run analysis in the background with out locking up your computers processors or memory
+-   Run analysis in the background with out locking up your computers processors or memory
 
-- Significantly faster then most laptops
-  - EX: 8+ hour analysis on a laptop took 3 hours on the AWS Server configured for memory intensive computing
+-   Significantly faster then most laptops
 
+    -   EX: 8+ hour analysis on a laptop took 3 hours on the AWS Server configured for memory intensive computing
 :::
 
-::: {.column}
+::: column
 ![](aws_rstudio.png){.absolute top="90" bottom="10" width="7in"}
 :::
-
 :::
 
-
-
-```{css, echo=FALSE} 
+```{css, echo=FALSE}
 
 .panel-tabset-tabby {
   font-size: 23px;
 }
 
 ```
-
-
